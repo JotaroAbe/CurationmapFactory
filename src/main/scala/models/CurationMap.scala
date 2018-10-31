@@ -2,8 +2,9 @@ package models
 
 import java.util.UUID
 
-import jsons.{CurationMapJson, DocumentJson, FragmentJson, LinkJson}
-import morphias._
+import dataStructures.jsons
+import dataStructures.jsons.{CurationMapJson, DocumentJson, FragmentJson, LinkJson}
+import dataStructures.morphias.{CurationMapMorphia, DocumentMorphia, FragmentMorphia, LinkMorphia}
 import play.api.libs.json._
 import tools.{DuplicateLinkChecker, LinkMerger}
 
@@ -199,11 +200,11 @@ case class CurationMap(query : String, documents : Vector[Document]) {
               link =>
                linkJsons += LinkJson(link.getDestDocNum, link.destUuid.toString)
             }
-            fragmentJsons += FragmentJson(frag.getText, linkJsons.toList, frag.uuid.toString)
+            fragmentJsons += jsons.FragmentJson(frag.getText, linkJsons.toList, frag.uuid.toString)
         }
-        documentJsons += DocumentJson(doc.url, doc.docNum, doc.currentHub, doc.currentAuth, fragmentJsons.toList, doc.uuid.toString)
+        documentJsons += jsons.DocumentJson(doc.url, doc.docNum, doc.currentHub, doc.currentAuth, fragmentJsons.toList, doc.uuid.toString)
     }
-    CurationMapJson(query, documentJsons.toList)
+    jsons.CurationMapJson(query, documentJsons.toList)
   }
 
   def getMorphia : CurationMapMorphia={

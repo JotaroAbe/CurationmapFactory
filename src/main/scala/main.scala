@@ -1,4 +1,4 @@
-import morphias._
+import dataStructures.morphias.MongoDatastoreFactory
 import org.mongodb.morphia.Datastore
 import pipeline.CMapGenerator
 

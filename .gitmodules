@@ -1,0 +1,3 @@
+[submodule "src/main/scala/dataStructure"]
+	path = src/main/scala/dataStructure
+	url = git@github.com:JotaroAbe/CurationmapDataStructure.git

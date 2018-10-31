@@ -1,8 +1,8 @@
 package pipeline
 
-import jsons.CurationMapJson
+import dataStructures.jsons.CurationMapJson
+import dataStructures.morphias.CurationMapMorphia
 import models.CurationMap
-import morphias.{CurationMapMorphia, MongoDatastoreFactory}
 import org.mongodb.morphia.Datastore
 import org.mongodb.morphia.query.Query
 import play.api.libs.json.{JsValue, Json}
