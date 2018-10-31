@@ -4,7 +4,6 @@ import dataStructures.jsons.CurationMapJson
 import dataStructures.morphias.CurationMapMorphia
 import org.mongodb.morphia.Datastore
 import org.mongodb.morphia.query.Query
-import play.api.libs.json.Json
 import tools.{DataInputer, GoogleSearcher}
 
 
@@ -26,15 +25,5 @@ case class CMapGenerator(query :String, ds : Datastore) {
     ds.save[CurationMapMorphia](cMap.getMorphia)
 
     cMapJsonOpt = Option(cMap.toJson)
-  }else{
-    cMapJsonOpt = Option(res.get().toJson)
-  }
-
-
-  def getCMapJson: String ={
-    cMapJsonOpt match {
-      case Some(v) => Json.toJson(v).toString()
-      case _ => "{}"
-    }
   }
 }

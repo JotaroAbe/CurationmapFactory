@@ -12,7 +12,7 @@ object Main {
         dsOpt = Option(newDataStore)
         newDataStore
     }
-    CMapGenerator("シンデレラガールズ", ds)
+    CMapGenerator("デレステ", ds)
 
   }
 }
