@@ -12,7 +12,7 @@ object Main {
         dsOpt = Option(newDataStore)
         newDataStore
     }
-    CMapGenerator("デレステ", ds)
+    CMapGenerator("桜木町", ds)
 
   }
 }
