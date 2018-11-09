@@ -1,36 +1,62 @@
 package tools
 
-import com.typesafe.config.ConfigFactory
-import org.jsoup.{Jsoup, nodes}
+import java.net.URL
+
+import com.google.api.client.http.HttpRequest
+import com.google.api.services.customsearch.model.{Result, Search}
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.mutable
-import scala.util.matching.Regex
-
+import com.google.api.client.http.HttpRequestInitializer
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.customsearch.Customsearch
 
 
 case class GoogleSearcher(query : String) {
-  val config = ConfigFactory.load()
+  val config: Config = ConfigFactory.load()
+  val HTTP_REQUEST_TIMEOUT = 1000
+  val URL_ONCE_NUM = 10
+  val GET_URL_NUM = 100
 
-
-  val source: nodes.Document =
-    Jsoup.connect(s"https://www.googleapis.com/customsearch/v1?q=$query&cx=${config.getString("csecx")}&key=${config.getString("csekey")}").ignoreContentType(true).get
-  val (head, body) = (source.head, source.body)
-  val line: String = body.text
-
-  val r: Regex = "\"link\": .*?,".r
-  val URLs: Regex.MatchIterator = r.findAllIn(line)
-
-
-
-  def getInput : List[String] ={
-    val m =  mutable.MutableList.empty[String]
-    while(URLs.hasNext){
-      val str =  URLs.next()
-      m += str.substring(9 ,str.length - 2)
+  val customsearch = new Customsearch(new NetHttpTransport, new JacksonFactory, new HttpRequestInitializer() {
+    def initialize(httpRequest: HttpRequest): Unit = {
+      try { // set connect and read timeouts
+        httpRequest.setConnectTimeout(HTTP_REQUEST_TIMEOUT)
+        httpRequest.setReadTimeout(HTTP_REQUEST_TIMEOUT)
+      } catch {
+        case ex: Exception =>
+          ex.printStackTrace()
+      }
     }
-    m.toList
+  })
 
+  var startIndex = 1
+  val urls: mutable.MutableList[String] = mutable.MutableList.empty[String]
+  while(startIndex < GET_URL_NUM) {
+
+    val list: Customsearch#Cse#List = customsearch.cse.list(query)
+    list.setKey(config.getString("csekey"))
+    list.setCx(config.getString("csecx"))
+    list.setNum(URL_ONCE_NUM.toLong)
+    list.setStart(startIndex.toLong)
+    val results: Search = list.execute
+    val resultList: java.util.List[Result] = results.getItems
+
+    resultList.forEach {
+      result =>
+        if(result.getFormattedUrl.startsWith("http")){
+          urls += result.getFormattedUrl
+        }else{
+          urls += s"http://${result.getFormattedUrl}"
+        }
+    }
+
+    startIndex += startIndex + URL_ONCE_NUM
   }
 
+  def getInput : List[String] ={
+    urls.toList
+  }
 
 }
