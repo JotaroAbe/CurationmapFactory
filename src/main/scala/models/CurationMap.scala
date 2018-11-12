@@ -202,7 +202,7 @@ case class CurationMap(query : String, documents : Vector[Document]) {
             }
             fragmentJsons += jsons.FragmentJson(frag.getText, linkJsons.toList, frag.uuid.toString)
         }
-        documentJsons += jsons.DocumentJson(doc.url, doc.docNum, doc.currentHub, doc.currentAuth, fragmentJsons.toList, doc.uuid.toString)
+        documentJsons += jsons.DocumentJson(doc.url, doc.title, doc.docNum, doc.currentHub, doc.currentAuth, fragmentJsons.toList, doc.uuid.toString)
     }
     jsons.CurationMapJson(query, documentJsons.toList)
   }
@@ -224,7 +224,7 @@ case class CurationMap(query : String, documents : Vector[Document]) {
             }
             fragmentMorphia += new FragmentMorphia(frag.getText, linkMorphia.toList.asJava, frag.uuid.toString)
         }
-        documentMorphia += new DocumentMorphia(doc.url, doc.docNum, doc.currentHub, doc.currentAuth, fragmentMorphia.toList.asJava, doc.uuid.toString)
+        documentMorphia += new DocumentMorphia(doc.url, doc.title, doc.docNum, doc.currentHub, doc.currentAuth, fragmentMorphia.toList.asJava, doc.uuid.toString)
     }
     new CurationMapMorphia(query, documentMorphia.toList.asJava)
   }

@@ -24,7 +24,9 @@ case class DataInputer(){
           println(s"$i / ${sourceList.length}")
           println(s"source URL:$source")
           val fragList = mutable.MutableList.empty[Fragment]
-          val docStr: String = GetterFromWeb(source).getInput
+          val webData = GetterFromWeb(source)
+          val docStr: String = webData.getBodyText
+          val docTitle: String = webData.getTitle
 
           if(docStr.nonEmpty) {
             val queue: mutable.MutableList[Morpheme] = mutable.MutableList.empty[Morpheme]
@@ -47,7 +49,7 @@ case class DataInputer(){
                   }
                 }
             }
-            val doc: Document = Document(source, fragList.toVector, sourceList.indexOf(source))
+            val doc: Document = Document(source, docTitle, fragList.toVector, sourceList.indexOf(source))
             doc.setDocNumToFrag()
 
             docList += doc
