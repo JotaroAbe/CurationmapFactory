@@ -4,10 +4,11 @@ case class Morpheme(word: String, morph : String) {
 
   private val pos =  morph.split(",").head
   private val spos = morph match {
-    case "EOS" => "EOS"
+    case m if !m.contains(",") => "EOS"
     case _ => morph.split(",")(1)
   }
 
+  println(s"word: $word pos: $pos spos: $spos")
 
   def getPartsOfSpeech:String ={
     //println(s"$word +++ ${morph.split(",").head}")
