@@ -46,8 +46,15 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
     linkedFrag = 0
     fragList.foreach{
       frag =>
-        if(frag.links.nonEmpty){
+        /*if(frag.links.nonEmpty){
           linkedFrag += 1
+        }*/
+
+        frag.links.foreach{
+          link =>
+            if(link.weight >= CurationMap.ALPHA){
+              linkedFrag += 1
+            }
         }
     }
   }
@@ -68,7 +75,7 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
           link =>
             documents.foreach{
               doc =>
-                if(doc.docNum == link.getDestDocNum && maxAuth < doc.preAuth){
+                if(doc.docNum == link.getDestDocNum && maxAuth < doc.preAuth  && link.weight >= CurationMap.ALPHA){
                   maxAuth = doc.preAuth
                 }
             }
@@ -80,7 +87,7 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
     currentAuth = 0.0
     documents.foreach{
       doc =>
-        if(doc.hasLink(docNum)){
+        if(doc.hasLink(this.docNum)){
           currentAuth += doc.preHub
         }
     }

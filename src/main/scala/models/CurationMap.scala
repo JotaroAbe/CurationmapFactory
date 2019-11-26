@@ -177,6 +177,7 @@ case class CurationMap(query : String, documents : Vector[Document]) {
                         link.destText = changeText
                         link.destUuid = changeUuid
                       }
+                      println(s"Doc${doc.docNum} -> $changeText")
                     }
                 }
 
@@ -198,13 +199,13 @@ case class CurationMap(query : String, documents : Vector[Document]) {
             linkJsons.clear
             frag.links.foreach{
               link =>
-               linkJsons += LinkJson(link.getDestDocNum, link.destUuid.toString)
+               linkJsons += LinkJson(link.getDestDocNum, link.weight, link.destUuid.toString)
             }
             fragmentJsons += jsons.FragmentJson(frag.getText, linkJsons.toList, frag.uuid.toString)
         }
         documentJsons += jsons.DocumentJson(doc.url, doc.title, doc.docNum, doc.currentHub, doc.currentAuth, fragmentJsons.toList, doc.uuid.toString)
     }
-    jsons.CurationMapJson(query, documentJsons.toList)
+    jsons.CurationMapJson(query, CurationMap.ALPHA, documentJsons.toList)
   }
 
   def getMorphia : CurationMapMorphia={
@@ -220,13 +221,13 @@ case class CurationMap(query : String, documents : Vector[Document]) {
             linkMorphia.clear
             frag.links.foreach{
               link =>
-                linkMorphia += new LinkMorphia(link.getDestDocNum, link.destUuid.toString)
+                linkMorphia += new LinkMorphia(link.getDestDocNum, link.weight, link.destUuid.toString)
             }
             fragmentMorphia += new FragmentMorphia(frag.getText, linkMorphia.toList.asJava, frag.uuid.toString)
         }
         documentMorphia += new DocumentMorphia(doc.url, doc.title, doc.docNum, doc.currentHub, doc.currentAuth, fragmentMorphia.toList.asJava, doc.uuid.toString)
     }
-    new CurationMapMorphia(query, documentMorphia.toList.asJava)
+    new CurationMapMorphia(query, CurationMap.ALPHA, documentMorphia.toList.asJava)
   }
 
   def getText : String={

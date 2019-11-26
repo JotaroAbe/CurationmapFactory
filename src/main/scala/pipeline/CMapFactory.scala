@@ -26,8 +26,8 @@ case class CMapFactory() {
 
       val cMap: CurationMap = di.inputWebData(query, list)
       cMap.genLink()
-      cMap.genSplitLink()
-      cMap.mergeLink()
+      //cMap.genSplitLink()
+      //cMap.mergeLink()
       cMap.calcHits()
       cMap.changeLinkDest()
 

@@ -38,7 +38,7 @@ case class Fragment (morphList: Vector[Morpheme]){
     var ret : Boolean = false
     links.foreach{
       link =>
-        if(link.getDestDocNum == docNum){
+        if(link.getDestDocNum == docNum && link.weight >= CurationMap.ALPHA){
           ret = true
         }
     }
@@ -50,12 +50,12 @@ case class Fragment (morphList: Vector[Morpheme]){
     if (docNum != destDoc.docNum) {
       val inclusiveScore: Double = calcInclusive(destDoc)
       //println(s"$inclusiveScore")
-      if (inclusiveScore >= CurationMap.ALPHA) {
-        println(s"Generate Link Doc${this.docNum} -> Doc${destDoc.docNum}")
-        link = InclusiveLink(destDoc.getText, destDoc.uuid ,destDoc.docNum)
-      } else {
+      //if (inclusiveScore >= CurationMap.ALPHA) {
+        println(s"Doc${this.docNum} -> Doc${destDoc.docNum} Weight: ${inclusiveScore}")
+        link = InclusiveLink(destDoc.getText, inclusiveScore, destDoc.uuid ,destDoc.docNum)
+      //} else {
         //frag.links += NoneLink(doc.docNum)
-      }
+      //}
     }else{
       //frag.links += NoneLink(doc.docNum)
     }
@@ -75,7 +75,7 @@ case class Fragment (morphList: Vector[Morpheme]){
         rearFrag.links.foreach{
           rearLink=>
           if(preLink.destDocNum == rearLink.destDocNum){
-            mergedFrag.links += InclusiveLink(preLink.destText, preLink.destUuid ,preLink.destDocNum)
+            mergedFrag.links += preLink + rearLink
           }
         }
     }
