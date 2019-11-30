@@ -15,7 +15,7 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
   var currentAuth : Double = initAuth
   var linkedFrag : Int = 0
   var totalFrag : Int = 0
-  val uuid :UUID = UUID.randomUUID
+  //val uuid :UUID = UUID.randomUUID
 
 
   def setDocNumToFrag(): Unit ={
@@ -25,18 +25,18 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
     }
   }
 
-  def hasLink(docNum : Int): Boolean ={
+  def hasLink(docNum : Int, alpha : Double): Boolean ={
     var ret = false
     fragList.foreach{
       frag =>
-        if(frag.hasLink(docNum)){
+        if(frag.hasLink(docNum, alpha)){
           ret = true
         }
     }
     ret
   }
 
-  def initHitsCalc():Unit={
+  def initHitsCalc(alpha : Double):Unit={
     preHub  = initHub
     preAuth = initAuth
     currentHub = initHub
@@ -52,7 +52,7 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
 
         frag.links.foreach{
           link =>
-            if(link.weight >= CurationMap.ALPHA){
+            if(link.weight >= alpha){
               linkedFrag += 1
             }
         }
@@ -64,7 +64,7 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
     preAuth = currentAuth
   }
 
-  def calcHitsOnce(documents : Vector[Document]):Unit={
+  def calcHitsOnce(documents : Vector[Document], alpha : Double):Unit={
     var maxAuth : Double = 0.0
     currentHub = 0.0
 
@@ -75,7 +75,7 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
           link =>
             documents.foreach{
               doc =>
-                if(doc.docNum == link.getDestDocNum && maxAuth < doc.preAuth  && link.weight >= CurationMap.ALPHA){
+                if(doc.docNum == link.getDestDocNum && maxAuth < doc.preAuth  && link.weight >= alpha){
                   maxAuth = doc.preAuth
                 }
             }
@@ -87,7 +87,7 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
     currentAuth = 0.0
     documents.foreach{
       doc =>
-        if(doc.hasLink(this.docNum)){
+        if(doc.hasLink(this.docNum, alpha)){
           currentAuth += doc.preHub
         }
     }

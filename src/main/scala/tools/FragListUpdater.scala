@@ -10,10 +10,10 @@ case class FragListUpdater(list : Vector[Fragment], oldPreFrag : Fragment, oldRe
   private val newListbuff = mutable.MutableList.empty[Fragment]
   list.foreach{
     frag=>
-      if(frag.uuid == oldPreFrag.uuid){
+      if(frag == oldPreFrag){//変えたUUID
         newListbuff += newFrag
 
-      }else if(frag.uuid == oldRearFrag.uuid){
+      }else if(frag == oldRearFrag){
         //Do Nothing
       }else{
         newListbuff += frag
@@ -28,4 +28,3 @@ case class FragListUpdater(list : Vector[Fragment], oldPreFrag : Fragment, oldRe
   }
 
 }
-

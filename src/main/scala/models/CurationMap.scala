@@ -12,11 +12,17 @@ import scala.collection.mutable
 import scala.collection.JavaConverters._
 
 object CurationMap{
-  final val ALPHA : Double = 0.6
+  final val DEFAULT_ALPHA : Double = 0.6
+  final val DEFAULT_BETA : Double = 0.6
   final val EPSILON : Double = 0.0001
 }
 
-case class CurationMap(query : String, documents : Vector[Document]) {
+case class CurationMap(query : String, documents : Vector[Document], alpha : Double, beta : Double) {
+
+  documents.foreach{
+    doc =>
+      doc.setDocNumToFrag()
+  }
 
   def genLink(): Unit ={
 
@@ -38,6 +44,31 @@ case class CurationMap(query : String, documents : Vector[Document]) {
     }
   }
 
+  def deleteWeakLink(): Unit ={
+
+    val weakWeight: Double =
+      if (alpha <= beta){
+        alpha
+      }else{
+        beta
+      }
+
+    documents.foreach{
+      doc =>
+        doc.fragList.foreach{
+          frag =>
+            val newLinks = mutable.MutableList.empty[InclusiveLink]
+            frag.links.foreach{
+              link =>
+                if(link.weight >= weakWeight){
+                  newLinks += link
+                }
+            }
+            frag.links = newLinks
+        }
+    }
+  }
+
   def genSplitLink(): Unit={
 
     println("リンク補間中...")
@@ -50,11 +81,11 @@ case class CurationMap(query : String, documents : Vector[Document]) {
           doc.fragList.foreach {
             rearFrag =>
               if (!preFrag.isFragNone && !centerFrag.isFragNone) {
-                if(centerFrag.links.isEmpty) {
-                  val d = DuplicateLinkChecker(preFrag, rearFrag)
+                if(!centerFrag.hasStrongLink(alpha)) {
+                  val d = DuplicateLinkChecker(preFrag, rearFrag, alpha)
                   d.getDupDocNumSet.foreach {
                     docNum =>
-                      centerFrag.genLink(getDocument(docNum))
+                      centerFrag.genLink(getDocument(docNum), alpha)
                   }
                 }
                 newFragList += preFrag
@@ -73,6 +104,7 @@ case class CurationMap(query : String, documents : Vector[Document]) {
   def mergeLink(): Unit ={
     println("リンク併合中...")
     var loop : Boolean = false
+    var i = 0
 
     do{
       loop = false
@@ -83,25 +115,28 @@ case class CurationMap(query : String, documents : Vector[Document]) {
           var currentFragList = doc.fragList
           doc.fragList.foreach {
             frag =>
-              val lm = LinkMerger(preFrag, frag, currentFragList)
+              val lm = LinkMerger(preFrag, frag, currentFragList, beta)
               preFrag = frag
               currentFragList = lm.getNewFragList
 
               if (lm.isMerge) {
-                loop = true
+                //loop = true
               }
           }
-          doc.fragList = currentFragList
-      }
 
-    }while(loop)
+          doc.fragList = currentFragList
+
+
+      }
+      i = i + 1
+    }while(i < 3)//とりあえず無限ループしないよう
   }
 
   def calcHits(): Unit= {
     println("HITS計算中...")
     documents.foreach{
       doc=>
-        doc.initHitsCalc()
+        doc.initHitsCalc(alpha)
     }
     do {
       documents.foreach {
@@ -110,7 +145,7 @@ case class CurationMap(query : String, documents : Vector[Document]) {
       }
       documents.foreach {
         doc =>
-          doc.calcHitsOnce(documents)
+          doc.calcHitsOnce(documents, alpha)
       }
       documents.foreach {
         doc =>
@@ -170,12 +205,12 @@ case class CurationMap(query : String, documents : Vector[Document]) {
                             && initfrag.getText.length < destFrag.getText.length){
                             maxInclusive = thisInclusive
                             changeText = destFrag.getText
-                            changeUuid = destFrag.uuid
+                            //changeUuid = destFrag.uuid
                           }
                       }
                       if(!changeText.isEmpty) {
-                        link.destText = changeText
-                        link.destUuid = changeUuid
+                        //link.destText = changeText
+                        //link.destUuid = changeUuid
                       }
                       println(s"Doc${doc.docNum} -> $changeText")
                     }
@@ -199,13 +234,13 @@ case class CurationMap(query : String, documents : Vector[Document]) {
             linkJsons.clear
             frag.links.foreach{
               link =>
-               linkJsons += LinkJson(link.getDestDocNum, link.weight, link.destUuid.toString)
+                linkJsons += LinkJson(link.getDestDocNum, link.weight)
             }
-            fragmentJsons += jsons.FragmentJson(frag.getText, linkJsons.toList, frag.uuid.toString)
+            fragmentJsons += jsons.FragmentJson(frag.getText, linkJsons.toList)
         }
-        documentJsons += jsons.DocumentJson(doc.url, doc.title, doc.docNum, doc.currentHub, doc.currentAuth, fragmentJsons.toList, doc.uuid.toString)
+        documentJsons += jsons.DocumentJson(doc.url, doc.title, doc.docNum, doc.currentHub, doc.currentAuth, fragmentJsons.toList)
     }
-    jsons.CurationMapJson(query, CurationMap.ALPHA, documentJsons.toList)
+    jsons.CurationMapJson(query, alpha, beta,documentJsons.toList)
   }
 
   def getMorphia : CurationMapMorphia={
@@ -221,13 +256,13 @@ case class CurationMap(query : String, documents : Vector[Document]) {
             linkMorphia.clear
             frag.links.foreach{
               link =>
-                linkMorphia += new LinkMorphia(link.getDestDocNum, link.weight, link.destUuid.toString)
+                linkMorphia += new LinkMorphia(link.getDestDocNum, link.weight)
             }
-            fragmentMorphia += new FragmentMorphia(frag.getText, linkMorphia.toList.asJava, frag.uuid.toString)
+            fragmentMorphia += new FragmentMorphia(frag.morphList.toList.asJava,linkMorphia.toList.asJava)
         }
-        documentMorphia += new DocumentMorphia(doc.url, doc.title, doc.docNum, doc.currentHub, doc.currentAuth, fragmentMorphia.toList.asJava, doc.uuid.toString)
+        documentMorphia += new DocumentMorphia(doc.url, doc.title, doc.docNum, fragmentMorphia.toList.asJava)
     }
-    new CurationMapMorphia(query, CurationMap.ALPHA, documentMorphia.toList.asJava)
+    new CurationMapMorphia(query, documentMorphia.toList.asJava)
   }
 
   def getText : String={

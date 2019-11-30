@@ -4,7 +4,7 @@ import models._
 
 import scala.collection.mutable
 
-case class LinkMerger(preFrag: Fragment, rearFrag: Fragment, currentFragList : Vector[Fragment]) {
+case class LinkMerger(preFrag: Fragment, rearFrag: Fragment, currentFragList : Vector[Fragment], beta : Double) {
   val mergedLinks : mutable.MutableList[InclusiveLink] = mutable.MutableList.empty[InclusiveLink]
   val mergePreLinks : mutable.MutableList[InclusiveLink] = mutable.MutableList.empty[InclusiveLink]
   val mergeRearLinks : mutable.MutableList[InclusiveLink] = mutable.MutableList.empty[InclusiveLink]
@@ -28,7 +28,7 @@ case class LinkMerger(preFrag: Fragment, rearFrag: Fragment, currentFragList : V
   }
 
   def hasDuplicateLinks : Boolean={
-    DuplicateLinkChecker(preFrag, rearFrag).isDuplicate
+    DuplicateLinkChecker(preFrag, rearFrag, beta).isDuplicate
   }
 
   private def genDuplicateLinkAndFrag():Unit={

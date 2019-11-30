@@ -4,25 +4,25 @@ import models.{Document, Fragment, InclusiveLink}
 
 import scala.collection.mutable
 
-case class DuplicateLinkChecker(frag1 : Fragment, frag2 : Fragment) {
+case class DuplicateLinkChecker(frag1 : Fragment, frag2 : Fragment, weight : Double) {
 
   var isDuplicate : Boolean = false
   private val dupDocNumSet = mutable.Set.empty[Int]
 
-  getDestLinkDocNums(frag1).foreach{
+  getStrongDestLinkDocNums(frag1, weight).foreach{
     destDocNum=>
-      if(getDestLinkDocNums(frag2).contains(destDocNum)){//重複
+      if(getStrongDestLinkDocNums(frag2, weight).contains(destDocNum)){//重複
         dupDocNumSet += destDocNum
         isDuplicate = true
       }
   }
 
 
-  private def getDestLinkDocNums(frag :Fragment) : Set[Int]={
+  private def getStrongDestLinkDocNums(frag :Fragment, weight :Double) : Set[Int]={
     val ret = mutable.Set.empty[Int]
     frag.links.foreach{
       link=>
-        if(link.getDestDocNum != Document.docNumNone){
+        if(link.weight >= weight){
           ret += link.getDestDocNum
         }
     }

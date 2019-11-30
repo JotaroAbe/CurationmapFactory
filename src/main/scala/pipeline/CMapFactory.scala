@@ -13,7 +13,7 @@ case class CMapFactory() {
 
   def createMap(query :String, ds : Datastore): Unit ={
     val res: Query[CurationMapMorphia] = ds.createQuery(classOf[CurationMapMorphia]).field("query").equal(query)
-    var cMapJsonOpt: Option[CurationMapJson] = Option.empty[CurationMapJson]
+    //var cMapJsonOpt: Option[CurationMapJson] = Option.empty[CurationMapJson]
 
     if(res.count() == 0){
 
@@ -28,12 +28,12 @@ case class CMapFactory() {
       cMap.genLink()
       //cMap.genSplitLink()
       //cMap.mergeLink()
-      cMap.calcHits()
-      cMap.changeLinkDest()
+      //cMap.calcHits()
+      //cMap.changeLinkDest()
 
       ds.save[CurationMapMorphia](cMap.getMorphia)
 
-      cMapJsonOpt = Option(cMap.toJson)
+      //cMapJsonOpt = Option(cMap.toJson)
     }else{
       println(s"「$query」はすでにDB内に存在します。")
     }

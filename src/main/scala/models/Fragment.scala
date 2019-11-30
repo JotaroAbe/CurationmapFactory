@@ -2,13 +2,15 @@ package models
 
 import java.util.UUID
 
+import org.apache.lucene.search.Weight
+
 import scala.collection.immutable.List
 import scala.collection.mutable
 
 case class Fragment (morphList: Vector[Morpheme]){
 
   var docNum : Int = Document.docNumNone
-  val uuid :UUID = UUID.randomUUID
+  //val uuid :UUID = UUID.randomUUID
   var links: mutable.MutableList[InclusiveLink] = mutable.MutableList.empty[InclusiveLink]
 
   def getText: String ={
@@ -34,11 +36,11 @@ case class Fragment (morphList: Vector[Morpheme]){
   }
 
 
-  def hasLink(docNum : Int): Boolean ={
+  def hasLink(docNum : Int, alpha : Double): Boolean ={
     var ret : Boolean = false
     links.foreach{
       link =>
-        if(link.getDestDocNum == docNum && link.weight >= CurationMap.ALPHA){
+        if(link.getDestDocNum == docNum && link.weight >= alpha){
           ret = true
         }
     }
@@ -51,10 +53,30 @@ case class Fragment (morphList: Vector[Morpheme]){
       val inclusiveScore: Double = calcInclusive(destDoc)
       //println(s"$inclusiveScore")
       //if (inclusiveScore >= CurationMap.ALPHA) {
-        println(s"Doc${this.docNum} -> Doc${destDoc.docNum} Weight: ${inclusiveScore}")
-        link = InclusiveLink(destDoc.getText, inclusiveScore, destDoc.uuid ,destDoc.docNum)
+      println(s"Doc${this.docNum} -> Doc${destDoc.docNum} Weight: $inclusiveScore")
+      link = InclusiveLink(inclusiveScore, destDoc.docNum)
       //} else {
-        //frag.links += NoneLink(doc.docNum)
+      //frag.links += NoneLink(doc.docNum)
+      //}
+    }else{
+      //frag.links += NoneLink(doc.docNum)
+    }
+    if(!link.isLinkNone){
+      links += link
+    }
+
+  }
+
+  def genLink(destDoc : Document, weight : Double): Unit ={
+    var link : InclusiveLink = LinkNone.apply(Document.docNumNone)
+    if (docNum != destDoc.docNum) {
+      //val inclusiveScore: Double = calcInclusive(destDoc)
+      //println(s"$inclusiveScore")
+      //if (inclusiveScore >= CurationMap.ALPHA) {
+      println(s"Doc${this.docNum} -> Doc${destDoc.docNum} Weight: $weight")
+      link = InclusiveLink(weight, destDoc.docNum)
+      //} else {
+      //frag.links += NoneLink(doc.docNum)
       //}
     }else{
       //frag.links += NoneLink(doc.docNum)
@@ -74,9 +96,9 @@ case class Fragment (morphList: Vector[Morpheme]){
       preLink =>
         rearFrag.links.foreach{
           rearLink=>
-          if(preLink.destDocNum == rearLink.destDocNum){
-            mergedFrag.links += preLink + rearLink
-          }
+            if(preLink.destDocNum == rearLink.destDocNum){
+              mergedFrag.links += preLink + rearLink
+            }
         }
     }
     mergedFrag
@@ -119,6 +141,19 @@ case class Fragment (morphList: Vector[Morpheme]){
     }
 
 
+  }
+
+  def hasStrongLink(alpha: Double) : Boolean={
+    var ret = false
+
+    links.foreach{
+      l =>
+        if(l.weight >= alpha ){
+          ret = true
+        }
+    }
+
+    ret
   }
 
   def isFragNone :Boolean={

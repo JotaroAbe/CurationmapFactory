@@ -2,7 +2,7 @@ package models
 
 import java.util.UUID
 
-case class InclusiveLink(var destText : String, weight: Double , var destUuid: UUID, destDocNum : Int){
+case class InclusiveLink(weight: Double , destDocNum : Int){
 
 
   override def toString: String = {
@@ -14,19 +14,19 @@ case class InclusiveLink(var destText : String, weight: Double , var destUuid: U
     destDocNum
   }
 
-  def getDestText : String={
-    destText
-  }
+  /*  def getDestText : String={
+      destText
+    }*/
 
   def +(rearLink : InclusiveLink) :InclusiveLink={
-    InclusiveLink(destText, (this.weight + rearLink.weight) / 2,  destUuid ,destDocNum) //マージ戦略再考
+    InclusiveLink((this.weight + rearLink.weight) / 2, destDocNum) //マージ戦略再考
   }
   def isLinkNone :Boolean={
     false
   }
 }
 
-class LinkNone(initDocNum : Int) extends InclusiveLink("", 0.0,null ,Document.docNumNone){
+class LinkNone(initDocNum : Int) extends InclusiveLink(0.0,Document.docNumNone){
 
 
   override def toString: String = {
@@ -40,8 +40,7 @@ class LinkNone(initDocNum : Int) extends InclusiveLink("", 0.0,null ,Document.do
 
 
 }
-object LinkNone extends InclusiveLink("", 0.0, null, Document.docNumNone){
+object LinkNone extends InclusiveLink(0.0,  Document.docNumNone){
   def apply(initDocNum: Int): LinkNone = new LinkNone(initDocNum)
 }
-
 
