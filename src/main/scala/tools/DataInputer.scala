@@ -56,7 +56,7 @@ case class DataInputer(){
           }
         }
     }
-    CurationMap(query, docList.toVector)
+    CurationMap(query, docList.toVector, CurationMap.DEFAULT_ALPHA, CurationMap.DEFAULT_BETA)
   }
 
 
