@@ -5,6 +5,7 @@ import models.{CurationMap, Document, Fragment, Morpheme}
 import scala.collection.mutable
 
 import us.feliscat.text.analyzer.mor.mecab.IpadicMecab
+import scala.util.control.Breaks
 
 
 
@@ -15,7 +16,7 @@ case class DataInputer(){
   val docList: mutable.MutableList[Document] = mutable.MutableList.empty[Document]
 
   def inputWebData(query : String, sourceList : List[String]): CurationMap ={
-   println("Web文書読み込み開始")
+    println("Web文書読み込み開始")
     var i :Int = 0
     sourceList.foreach {
       source =>
@@ -25,28 +26,44 @@ case class DataInputer(){
           println(s"source URL:$source")
           val fragList = mutable.MutableList.empty[Fragment]
           val webData = GetterFromWeb(source)
-          val docStr: String = webData.getBodyText
+          val docStrList: List[String] = webData.getBodyTexts
           val docTitle: String = webData.getTitle
 
-          if(docStr.nonEmpty) {
+          if(docStrList.nonEmpty) {
             val queue: mutable.MutableList[Morpheme] = mutable.MutableList.empty[Morpheme]
             println("形態素解析中...")
-            docStr.split("。").foreach {
+            docStrList.foreach {
               str =>
-                if (str.nonEmpty) {
-                  IpadicMecab.analyze(StringOption(str + "。")).foreach {
-                    mor =>
-                      //println(mor)
-                      val m = Morpheme(mor.split("\t").head, mor.split("\t").last)
-                      if (m.morph != "EOS") {
-                        queue += m
-                        if (queue.last.getSubPartsOfSpeech == "句点") {
-                          fragList += Fragment(queue.toVector)
-                          //println(doc.fragList.last.getText())
-                          queue.clear()
-                        }
+                val b = new Breaks
+                b.breakable{
+                //docStr.split("。").foreach {
+                  //str =>
+                    if (str.nonEmpty) {
+                      println(str + "\n")
+                      IpadicMecab.analyze(StringOption(str)).foreach {
+                        mor =>
+                          //println(mor)
+                          val m = Morpheme(mor.split("\t").head, mor.split("\t").last)
+                          if (m.morph != "EOS") {
+                            queue += m
+                            /*if (queue.last.getSubPartsOfSpeech == "句点" ) {
+                              if(queue.size > 5){//短い＝意味ない
+                                fragList += Fragment(queue.toVector)
+                              }
+                              //println(doc.fragList.last.getText())
+                              queue.clear()
+                            }else */ if (queue.size > 255) { //長すぎもだめ
+                              queue.clear()
+                              b.break()
+                            }
+                          }
                       }
-                  }
+                      if(queue.size > 5){//短い＝意味ない
+                        fragList += Fragment(queue.toVector)
+                      }
+                      queue.clear()
+                      //   }
+                    }
                 }
             }
             val doc: Document = Document(source, docTitle, fragList.toVector, sourceList.indexOf(source))
