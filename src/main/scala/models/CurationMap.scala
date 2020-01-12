@@ -4,7 +4,8 @@ import java.util.UUID
 
 import dataStructures.jsons
 import dataStructures.jsons.{CurationMapJson, DocumentJson, FragmentJson, LinkJson}
-import dataStructures.morphias.{CurationMapMorphia, DocumentMorphia, FragmentMorphia, LinkMorphia}
+import dataStructures.morphias.{DocumentMorphia, FragmentMorphia, LinkMorphia}
+import dev.morphia.Datastore
 import play.api.libs.json._
 import tools.{DuplicateLinkChecker, LinkMerger}
 
@@ -24,7 +25,7 @@ case class CurationMap(query : String, documents : Vector[Document], alpha : Dou
       doc.setDocNumToFrag()
   }
 
-  def genLink(): Unit ={
+  def genLinkAndInsertDb(ds: Datastore): Unit ={
 
     var i : Int = 0
     println("リンク生成中...")
@@ -41,6 +42,8 @@ case class CurationMap(query : String, documents : Vector[Document], alpha : Dou
                 }
             }
         }
+        doc.insertDb(ds, query)
+        doc.removeLinks()
     }
   }
 
@@ -243,7 +246,7 @@ case class CurationMap(query : String, documents : Vector[Document], alpha : Dou
     jsons.CurationMapJson(query, alpha, beta,documentJsons.toList)
   }
 
-  def getMorphia : CurationMapMorphia={
+  def getMorphia : List[DocumentMorphia]={
     val documentMorphia = mutable.MutableList.empty[DocumentMorphia]
     val fragmentMorphia = mutable.MutableList.empty[FragmentMorphia]
     val linkMorphia = mutable.MutableList.empty[LinkMorphia]
@@ -260,9 +263,9 @@ case class CurationMap(query : String, documents : Vector[Document], alpha : Dou
             }
             fragmentMorphia += new FragmentMorphia(frag.morphList.toList.asJava,linkMorphia.toList.asJava, frag.id.toString)
         }
-        documentMorphia += new DocumentMorphia(doc.url, doc.title, doc.docNum, fragmentMorphia.toList.asJava, doc.id.toString)
+        documentMorphia += new DocumentMorphia(query, doc.url, doc.title, doc.docNum, fragmentMorphia.toList.asJava, doc.id.toString)
     }
-    new CurationMapMorphia(query, documentMorphia.toList.asJava)
+    documentMorphia.toList
   }
 
   def getText : String={

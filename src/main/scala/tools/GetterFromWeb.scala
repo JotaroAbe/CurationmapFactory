@@ -24,7 +24,11 @@ case class GetterFromWeb(url : String){
         try {
           cleanPreserveLineBreaks(doc.body().html).foreach {
             line =>
-              ret += line.trim
+              if(!line.contains("�")){
+                ret += line.trim
+              }else{
+                throw new Exception()
+              }
           }
         }catch {
           case e:Exception =>

@@ -19,7 +19,7 @@ case class BingSearcher() {
 
   val config: Config = ConfigFactory.load()
   private val subscriptionKey: String = config.getString("bingkey")
-  val NUMBER_OF_RESULT = 50
+  val NUMBER_OF_RESULT = 100
   val URL_ONCE_NUM = 50
   val SAFE_SEARCH = "Strict"
   /*

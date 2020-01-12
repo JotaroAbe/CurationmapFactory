@@ -2,7 +2,10 @@ package models
 
 import java.util.UUID
 
+import dataStructures.morphias.{DocumentMorphia, FragmentMorphia, LinkMorphia}
+import dev.morphia.Datastore
 import tools.{LinkMerger, UniqueId}
+import scala.collection.JavaConverters._
 
 import scala.collection.mutable
 
@@ -118,6 +121,38 @@ case class Document (url: String, title: String, var fragList : Vector[Fragment]
         nounList ++= frag.getNounList
     }
     nounList.toList
+  }
+
+  def insertDb(ds : Datastore, query: String): Boolean ={
+    var documentMorphia: Option[DocumentMorphia] = None
+    val fragmentMorphia = mutable.MutableList.empty[FragmentMorphia]
+    val linkMorphia = mutable.MutableList.empty[LinkMorphia]
+
+    fragList.foreach{
+      frag =>
+        linkMorphia.clear
+        frag.links.foreach{
+          link =>
+            linkMorphia += new LinkMorphia(link.getDestDocNum, link.weight)
+        }
+        fragmentMorphia += new FragmentMorphia(frag.morphList.toList.asJava,linkMorphia.toList.asJava, frag.id.toString)
+    }
+    documentMorphia = Some(new DocumentMorphia(query, url, title, docNum, fragmentMorphia.toList.asJava, id.toString))
+
+    documentMorphia match {
+      case docm : Some[DocumentMorphia] =>
+        ds.save[DocumentMorphia](docm.get)
+        true
+      case _ =>
+        false
+    }
+  }
+
+  def removeLinks(): Unit ={
+    fragList.foreach{
+      frag =>
+        frag.links.clear()
+    }
   }
 
 

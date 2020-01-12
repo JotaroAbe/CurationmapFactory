@@ -1,10 +1,9 @@
 package pipeline
 
-import dataStructures.jsons.CurationMapJson
-import dataStructures.morphias.CurationMapMorphia
+import dataStructures.morphias.DocumentMorphia
+import dev.morphia.Datastore
+import dev.morphia.query.Query
 import models.CurationMap
-import org.mongodb.morphia.Datastore
-import org.mongodb.morphia.query.Query
 import tools.{BingSearcher, DataInputer, GoogleSearcher}
 
 
@@ -12,7 +11,7 @@ case class CMapFactory() {
 
 
   def createMap(query :String, ds : Datastore): Unit ={
-    val res: Query[CurationMapMorphia] = ds.createQuery(classOf[CurationMapMorphia]).field("query").equal(query)
+    val res: Query[DocumentMorphia] = ds.createQuery(classOf[DocumentMorphia]).field("query").equal(query)
     //var cMapJsonOpt: Option[CurationMapJson] = Option.empty[CurationMapJson]
 
     if(res.count() == 0){
@@ -20,18 +19,19 @@ case class CMapFactory() {
       val searcher = BingSearcher()
       searcher.search(query)
 
-      val list: List[String] =searcher.getInput
-
       val di = DataInputer()
 
-      val cMap: CurationMap = di.inputWebData(query, list)
-      cMap.genLink()
+      val cMap: CurationMap = di.inputWebData(query, searcher.getInput)
+      cMap.genLinkAndInsertDb(ds)
       //cMap.genSplitLink()
       //cMap.mergeLink()
       //cMap.calcHits()
       //cMap.changeLinkDest()
 
-      ds.save[CurationMapMorphia](cMap.getMorphia)
+      /*cMap.getMorphia.foreach{
+        docm =>
+          ds.save[DocumentMorphia](docm)
+      }*/
 
       //cMapJsonOpt = Option(cMap.toJson)
     }else{
